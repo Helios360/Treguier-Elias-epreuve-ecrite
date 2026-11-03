@@ -7,6 +7,7 @@ const flash = require('connect-flash');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const logger = require('./config/logger');
+const { register, httpRequestDuration, httpRequestsTotal } = require('./config/metrics');
 
 const app = express();
 connectDB();
@@ -38,10 +39,27 @@ app.use(
 );
 app.use(flash());
 
+// Instrumentation : durée et compteur des requêtes HTTP (Prometheus)
+app.use((req, res, next) => {
+  const end = httpRequestDuration.startTimer();
+  res.on('finish', () => {
+    const labels = { method: req.method, route: req.path, status: res.statusCode };
+    httpRequestsTotal.inc(labels);
+    end(labels);
+  });
+  next();
+});
+
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/messages', require('./routes/messages'));
+
+// Endpoint de métriques pour Prometheus
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => logger.info(`Serveur en écoute sur le port ${PORT}`));
