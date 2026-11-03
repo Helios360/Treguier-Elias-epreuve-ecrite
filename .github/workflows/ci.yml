@@ -1,0 +1,96 @@
+name: CI/CD
+
+# Secrets requis (Settings > Secrets and variables > Actions) :
+#   DEPLOY_HOST     : hôte SSH du homeserver
+#   DEPLOY_USER     : utilisateur SSH
+#   DEPLOY_SSH_KEY  : clé privée SSH (setup par l'admin serveur)
+#   DEPLOY_PATH     : chemin du dépôt sur le serveur
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run lint
+
+  test-backend:
+    name: Tests backend (node:test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test backend/validation/schemas.test.js
+
+  test-frontend:
+    name: Tests frontend (jest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: frontend
+      - run: CI=true npm test -- --watchAll=false
+        working-directory: frontend
+
+  build:
+    name: Build des images Docker
+    needs: [lint, test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t app-backend ./backend
+      - run: docker build -t app-gateway ./gateway
+      - run: docker build -t app-notifications ./microservices/notifications
+      - run: docker build -t app-stock ./microservices/stock-management
+      - run: docker build --build-arg REACT_APP_API_BASE_URL=/api -t app-frontend ./frontend
+
+  deploy-preprod:
+    name: Déploiement pré-production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déployer sur preprod.symnodes.com
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull
+            docker compose -p symnodes-preprod -f docker-compose.preprod.yml up -d --build
+
+  deploy-prod:
+    name: Déploiement production
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Déployer sur symnodes.com
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull
+            docker compose up -d --build
