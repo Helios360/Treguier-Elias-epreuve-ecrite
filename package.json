@@ -12,7 +12,8 @@
     "start:backend": "nodemon backend/server.js",
     "start:frontend": "npm --prefix frontend start",
     "start:all": "npm-run-all --parallel start:notifications start:stock-management start:gateway start:backend start:frontend",
-    "docs": "node scripts/generate-docs.js"
+    "docs": "node scripts/generate-docs.js",
+    "rendu": "node scripts/generate-rendu.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
