@@ -286,6 +286,73 @@
 - **Correction** : sites Caddy `grafana.` / `prometheus.` / `alertmanager.symnodes.com` ; basic-auth Caddy pour Prometheus et Alertmanager ; les 3 services rejoignent le réseau proxy ; DNS + README mis à jour.
 - **Vérification** : `docker compose config` OK ; YAML valide.
 
+### 31. Copie du code applicatif au nom de `node` dans les images
+
+- **Commit** : `d326da4` — `fix(build): copie le code applicatif au nom de node (COPY --chown)`
+- **Fichiers** : `backend/Dockerfile`, `gateway/Dockerfile`,
+  `microservices/notifications/Dockerfile`, `microservices/stock-management/Dockerfile`
+- **Problème** : après reconstruction des images, `gateway`, `notifications` et
+  `stock-management` bouclaient en `Restarting` avec
+  `EACCES: permission denied, open '/app/logger.js'`. Les fichiers `logger.js` sont en mode
+  `600` côté hôte ; `COPY` conservait ce mode en les propriétarisant `root`, alors que
+  l'image s'exécute en `USER node`.
+- **Correction** : `COPY --chown=node:node . .` dans les quatre Dockerfiles — le mode `600`
+  devient lisible puisque `node` est propriétaire.
+- **Vérification** : build + `up -d` ; les trois services `Up` avec `RestartCount=0`,
+  backend *healthy*, `GET /api/products` → 200.
+
+### 32. Re-résolution du backend par nginx à chaud
+
+- **Commit** : `4425473` — `fix(frontend): re-resout le backend a chaud via le DNS Docker`
+- **Fichier** : `frontend/nginx.conf`
+- **Problème** : nginx résolvait `backend:5000` une seule fois au démarrage et figeait son
+  IP. Recréer le conteneur backend (nouvelle IP) renvoyait `502` sur `/api/` jusqu'au
+  redémarrage du frontend — donc à chaque déploiement.
+- **Correction** : `resolver 127.0.0.11 valid=10s` (DNS interne Docker) et
+  `proxy_pass $backend_upstream` dans une variable, ce qui force la re-résolution.
+- **Vérification** : `nginx -t` OK ; `GET /api/products` → 200 après recréation du
+  backend, sans redémarrer le frontend.
+
+### 33. Montage des configurations en répertoire et transmission des variables `ADMIN_*`
+
+- **Commit** : `e6255af` — `build(compose): monte les configurations en repertoire et transmet ADMIN_*`
+- **Fichiers** : `docker-compose.yml`, `docker-compose.monitoring.yml`,
+  `docker-compose.preprod.yml`, `caddy/Caddyfile`
+- **Problème (1)** : un bind mount de **fichier unique** reste épinglé sur l'ancien inode
+  lorsque `git` remplace le fichier (rename → nouvel inode). Le conteneur Caddy lisait donc
+  une version périmée : `caddy reload` répondait *config is unchanged* et les sous-domaines
+  de supervision étaient absents du proxy (erreur TLS `SSL_ERROR_INTERNAL_ERROR_ALERT`).
+- **Correction (1)** : les configurations sont montées par **répertoire** (`./caddy`,
+  `./monitoring/prometheus`, `./monitoring/alertmanager`), ce qui suit les remplacements de
+  fichiers. Prometheus référence ses consoles en chemin absolu (`/usr/share/prometheus`)
+  puisque le montage masque les liens symboliques de l'image.
+- **Problème (2)** : `ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` figuraient dans
+  `.env.example` mais dans **aucun** compose : les variables n'atteignaient jamais le
+  conteneur et le seed retombait silencieusement sur `admin` / `admin1234`.
+- **Correction (2)** : les trois variables sont déclarées dans les services backend de
+  production et de pré-production, avec valeurs par défaut (`:-`).
+- **Vérification** : `docker compose config` valide sur les trois fichiers ; après reload,
+  la configuration live de Caddy contient les 5 hôtes ; `docker inspect` confirme
+  `ADMIN_*` et `NOTIFY_RECIPIENT` dans l'environnement du conteneur backend.
+
+### 34. Script de redéploiement idempotent et création automatique de l'administrateur
+
+- **Commit** : `67630bf` — `feat(deploy): script de redeploiement idempotent et admin auto-cree`
+- **Fichiers** : `scripts/deploy.sh`, `backend/seed-admin.js`
+- **Problème** : le redéploiement reposait sur des commandes manuelles (pull, reload,
+  recréation de la supervision) faciles à oublier ; et le compte administrateur devait être
+  créé à la main. `seeder.js` ne convient pas en routine : il commence par
+  `Product.deleteMany()` et réinitialiserait le catalogue.
+- **Correction** : `scripts/deploy.sh` enchaîne `git pull --ff-only`, build + `up -d` de la
+  production, mise à jour de la supervision, rechargement à chaud de Caddy, puis vérifie les
+  URLs et l'état des conteneurs (code de sortie non nul en cas d'échec) — sans jamais
+  exécuter `down` ni `--remove-orphans`. `backend/seed-admin.js` garantit le compte admin de
+  façon idempotente : création s'il manque, promotion en `admin`, réalignement du mot de
+  passe sur le `.env` (comparaison bcrypt), et **ne touche pas au catalogue**.
+- **Vérification** : deux passages consécutifs du script — `Compte administrateur déjà
+  conforme` au second ; les 5 URLs répondent 200 / 200 / 302 / 401 / 401 ; catalogue intact
+  (5 produits) ; `npm run lint` sans erreur.
+
 ---
 
 ## Modèle de partie
