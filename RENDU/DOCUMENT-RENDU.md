@@ -77,12 +77,17 @@ _Séquences générées automatiquement depuis l'historique git le 2026-11-03T10
 > À compléter : site en production, pages panier/commande/admin, dashboard Grafana,
 > alertes, pipeline GitHub Actions, `docker compose ps`, certificat TLS, etc.
 
-- [ ] Page d'accueil (production)
-- [ ] Parcours panier → commande
-- [ ] Interface d'administration
-- [ ] Dashboard Grafana / supervision
-- [ ] Pipeline CI/CD (GitHub Actions)
-- [ ] Certificat HTTPS valide
+- [x] Page d'accueil (production)
+![alt text](image.png)
+- [x] Parcours panier → commande
+![alt text](image-1.png)
+- [x] Interface d'administration*
+![alt text](image-2.png)
+- [x] Dashboard Grafana / supervision
+![alt text](image-3.png)
+- [x] Pipeline CI/CD (GitHub Actions)
+![alt text](image-4.png)
+
 
 ## 5. Accès et identifiants
 
