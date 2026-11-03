@@ -97,8 +97,11 @@ un homeserver, exposee via le domaine `symnodes.com`.
 | 2026-11-03 | `20b5b83` | docs(rendu): regenere les sequences depuis l'historique git |
 | 2026-11-03 | `5041dfe` | fix(ci): saute le deploiement si les secrets SSH sont absents |
 | 2026-11-03 | `8a52b25` | merge: synchronise avec origin/main (registre 35-38, fix CI, RENDU avec captures) |
+| 2026-11-03 | `063f3b6` | docs: repond aux questions E21-E29 du formulaire |
+| 2026-11-03 | `b5ef695` | finished the rendu |
+| 2026-11-03 | `d07fd3e` | Merge branch 'main' of https://github.com/Helios360/Treguier-Elias-epreuve-ecrite |
 
-_Séquences générées automatiquement depuis l'historique git le 2026-11-03T14:43:35.718Z (64 commits)._
+_Séquences générées automatiquement depuis l'historique git le 2026-11-03T14:57:25.789Z (67 commits)._
 <!-- AUTO:SEQUENCES:END -->
 
 ## 4. Captures d'écran
