@@ -1,7 +1,7 @@
 // src/pages/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import { login, getMessages } from '../services/api';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -20,6 +20,16 @@ const Login = () => {
       // On ne conserve côté client que des informations non sensibles pour l'affichage.
       localStorage.setItem('username', username);
       localStorage.setItem('role', role);
+
+      // Affiche le message flash temporaire renvoyé par le backend
+      try {
+        const { data } = await getMessages();
+        const flash = data.messages || {};
+        const message = (flash.success && flash.success[0]) || (flash.error && flash.error[0]);
+        if (message) alert(message);
+      } catch (ignored) {
+        /* les messages sont optionnels */
+      }
 
       navigate('/'); // Redirige vers la page d'accueil après la connexion
     } catch (error) {

@@ -44,6 +44,7 @@ services:
       - GATEWAY_URL=http://gateway:8000
       - CORS_ORIGIN=${DOMAIN_URL}
       - NOTIFY_RECIPIENT=${NOTIFY_RECIPIENT}
+      - SESSION_SECRET=${SESSION_SECRET}
     depends_on:
       mongo:
         condition: service_healthy

@@ -20,10 +20,16 @@ exports.login = async (req, res) => {
 
   try {
     const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: 'Utilisateur non trouvé' });
+    if (!user) {
+      req.flash('error', 'Utilisateur non trouvé');
+      return res.status(400).json({ message: 'Utilisateur non trouvé' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Mot de passe incorrect' });
+    if (!isMatch) {
+      req.flash('error', 'Mot de passe incorrect');
+      return res.status(400).json({ message: 'Mot de passe incorrect' });
+    }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1h',
@@ -31,6 +37,7 @@ exports.login = async (req, res) => {
 
     // Le token est transmis via un cookie HTTPOnly (jamais exposé au JavaScript client)
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+    req.flash('success', 'Connexion réussie.');
 
     res.json({ role: user.role, username: user.username });
   } catch (error) {
@@ -40,6 +47,7 @@ exports.login = async (req, res) => {
 
 exports.logout = (req, res) => {
   res.clearCookie(COOKIE_NAME);
+  req.flash('success', 'Déconnexion réussie.');
   res.json({ message: 'Déconnexion réussie.' });
 };
 
@@ -52,6 +60,7 @@ exports.register = async (req, res) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
+      req.flash('error', 'Cet email est déjà utilisé.');
       return res.status(400).json({ message: 'Cet email est déjà utilisé.' });
     }
 
@@ -59,9 +68,11 @@ exports.register = async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
+    req.flash('success', 'Utilisateur créé avec succès.');
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
     logger.error("Erreur lors de l'inscription", error);
+    req.flash('error', 'Une erreur est survenue.');
     res.status(500).json({ message: 'Une erreur est survenue.' });
   }
 };

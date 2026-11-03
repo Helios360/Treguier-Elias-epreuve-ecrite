@@ -85,6 +85,7 @@ exports.createOrder = async (req, res) => {
     // }
 
     // Réponse de succès
+    req.flash('success', 'Commande créée avec succès');
     res.status(201).json({
       message: 'Commande créée avec succès',
       order: savedOrder,

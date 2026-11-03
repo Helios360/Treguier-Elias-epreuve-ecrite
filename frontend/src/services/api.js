@@ -15,6 +15,9 @@ export const login = (credentials) => api.post('/auth/login', credentials);
 export const register = (data) => api.post('/auth/register', data);
 export const logout = () => api.post('/auth/logout');
 
+// Messages flash (temporaires) émis par le backend
+export const getMessages = () => api.get('/messages');
+
 export const createOrder = (orderData) => api.post('/orders', orderData);
 
 export default api;
