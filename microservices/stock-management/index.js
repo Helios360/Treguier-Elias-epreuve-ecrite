@@ -1,5 +1,4 @@
 const express = require('express');
-require('dotenv').config();
 const app = express();
 const PORT = process.env.STOCK_PORT || 4003;
 
