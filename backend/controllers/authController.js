@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User'); // modèle utilisateur
 require('dotenv').config();
 const authLog = require('debug')('authRoutes:console');
+const logger = require('../config/logger');
 
 const COOKIE_NAME = 'token';
 const COOKIE_OPTIONS = {
@@ -60,7 +61,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
-    console.error("Erreur lors de l'inscription", error);
+    logger.error("Erreur lors de l'inscription", error);
     res.status(500).json({ message: 'Une erreur est survenue.' });
   }
 };

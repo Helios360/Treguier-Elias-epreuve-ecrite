@@ -5,14 +5,15 @@ const orderLog = require('debug')('orderRoutes:console')
 
 // URL du gateway (point d'entrée des microservices), configurable par environnement
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
+const logger = require('../config/logger');
 
 
 exports.createOrder = async (req, res) => {
   //userLog(`user is ${JSON.stringify(req.user)}`)
-  console.log(`user is in createOrder ${JSON.stringify(req.user)}`)
+  logger.debug(`user is in createOrder ${JSON.stringify(req.user)}`)
   //const { items, shippingAddress, paymentMethod } = req.body;
   const { items, shippingAddress, paymentMethod, shippingMethod, } = req.body;
-  console.log(`items are ${JSON.stringify(req.body)}`)
+  logger.debug(`items are ${JSON.stringify(req.body)}`)
   //const { items } = req.body;
   let userId = req.user.userId;
   // let shippingAddress = {
@@ -35,7 +36,7 @@ exports.createOrder = async (req, res) => {
   try {
     // Logique pour préparer les détails de la commande
     const orderDetails = items.map(({ productId, quantity, price }) => {
-      console.log(`Produit ID : ${productId}, Quantité : ${quantity}, Price ${price}`);
+      logger.debug(`Produit ID : ${productId}, Quantité : ${quantity}, Price ${price}`);
       return { productId, quantity, price };
     });
 
@@ -57,7 +58,7 @@ exports.createOrder = async (req, res) => {
     // Sauvegarder la commande dans la base de données
     const savedOrder = await newOrder.save();
 
-    console.log('Commande sauvegardée :', savedOrder);
+    logger.debug('Commande sauvegardée :', savedOrder);
 
     // Appel au micro-service de notification
     try {
@@ -69,7 +70,7 @@ exports.createOrder = async (req, res) => {
           .join('\n')}`,
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification', error);
+      logger.error('Erreur lors de l\'envoi de la notification', error);
     }
 
     // Appel au micro-service de gestion des stocks
@@ -80,7 +81,7 @@ exports.createOrder = async (req, res) => {
     //     )
     //   );
     // } catch (error) {
-    //   console.error('Erreur lors de la mise à jour des stocks', error);
+    //   logger.error('Erreur lors de la mise à jour des stocks', error);
     // }
 
     // Réponse de succès
@@ -89,7 +90,7 @@ exports.createOrder = async (req, res) => {
       order: savedOrder,
     });
   } catch (error) {
-    console.error('Erreur lors de la création de la commande', error);
+    logger.error('Erreur lors de la création de la commande', error);
     res.status(500).json({
       message: 'Une erreur est survenue lors de la création de la commande.',
     });
@@ -99,7 +100,7 @@ exports.createOrder = async (req, res) => {
 
 // exports.createOrder = async (req, res) => {
 //     const products = req.body; // Attente d'un tableau d'objets { productId, quantity }
-//     console.log(`products are ${JSON.stringify(products)}`)
+//     logger.debug(`products are ${JSON.stringify(products)}`)
     
 //     // // Vérification du format des données
 //     if (!Array.isArray(products.items) || products.items.length === 0) {
@@ -109,7 +110,7 @@ exports.createOrder = async (req, res) => {
 //     try {
 //     //   // Logique pour traiter chaque produit de la commande
 //       const orderDetails = products.items.map(({ productId, quantity }) => {
-//         console.log(`Produit ID : ${productId}, Quantité : ${quantity}`);
+//         logger.debug(`Produit ID : ${productId}, Quantité : ${quantity}`);
 //         return { productId, quantity };
 //       });
 
@@ -125,7 +126,7 @@ exports.createOrder = async (req, res) => {
 //             .join('\n')}`,
 //         });
 //       } catch (error) {
-//         console.error('Erreur lors de l\'envoi de la notification', error);
+//         logger.error('Erreur lors de l\'envoi de la notification', error);
 //       }
   
 //       // Appel au micro-service de gestion des stocks
@@ -136,7 +137,7 @@ exports.createOrder = async (req, res) => {
 //           )
 //         );
 //       } catch (error) {
-//         console.error('Erreur lors de la mise à jour des stocks', error);
+//         logger.error('Erreur lors de la mise à jour des stocks', error);
 //       }
   
 //       // Réponse de succès
@@ -145,7 +146,7 @@ exports.createOrder = async (req, res) => {
 //         orderDetails,
 //       });
 //     } catch (error) {
-//       console.error('Erreur lors de la création de la commande', error);
+//       logger.error('Erreur lors de la création de la commande', error);
 //       res.status(500).json({ message: 'Une erreur est survenue lors de la création de la commande.' });
 //     }
 //   };
@@ -159,7 +160,7 @@ exports.deleteOrder = async (req, res) => {
     }
     res.status(200).json({ message: `Commande ${id} supprimée avec succès.` });
   } catch (error) {
-    console.error('Erreur lors de la suppression de la commande', error);
+    logger.error('Erreur lors de la suppression de la commande', error);
     res.status(500).json({ message: 'Erreur lors de la suppression de la commande.' });
   }
 }
@@ -184,7 +185,7 @@ exports.validateOrder = async (req, res) => {
     }
     res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
   } catch (error) {
-    console.error('Erreur lors de la validation de la commande', error);
+    logger.error('Erreur lors de la validation de la commande', error);
     res.status(500).json({ message: 'Erreur lors de la validation de la commande.' });
   }
 }
@@ -193,7 +194,7 @@ exports.updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  console.log(`dump console log order id => ${orderId} status = ${status}`);
+  logger.debug(`dump console log order id => ${orderId} status = ${status}`);
   try {
     // Vérification des données
     if (!status) {
@@ -213,7 +214,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     res.status(200).json({ message: "Statut mis à jour avec succès", order });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la commande :", error);
+    logger.error("Erreur lors de la mise à jour de la commande :", error);
     res.status(500).json({ message: "Erreur serveur." });
   }
 };

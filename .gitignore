@@ -16,3 +16,7 @@ npm-debug.log*
 
 # Divers
 .DS_Store
+
+# Logs applicatifs
+logs/
+backend/logs/
