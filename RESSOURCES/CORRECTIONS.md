@@ -136,6 +136,57 @@
 - **Correction** : suppression du `require` inutile (les variables viennent de `environment` dans le compose).
 - **Vérification** : conteneur `stock-management` stable (prod et préprod).
 
+
+## Fournée 3 — sécurité & robustesse (E28)
+
+### 13. ESLint + Prettier
+
+- **Commit** : `fac0dbe` — `chore(lint): ajoute ESLint (flat config) et Prettier`
+- **Fichiers** : `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `package.json`, `package-lock.json`
+- **Problème** : aucune configuration de qualité / formatage de code (consigne imposée).
+- **Correction** : ESLint v10 flat config + eslint-config-prettier, Prettier, scripts `lint` / `format` / `format:check` (0 erreur, 9 warnings `no-unused-vars`).
+- **Vérification** : `npm run lint` OK.
+
+### 14. Validation des entrées avec Joi
+
+- **Commit** : `a236cb6` — `feat(validation): valide les entrées utilisateur avec Joi`
+- **Fichiers** : `backend/middlewares/validate.js`, `backend/validation/schemas.js`, `backend/routes/{authRoutes,orderRoutes,productRoutes}.js`, `backend/package.json`
+- **Problème** : aucune validation des données entrantes (insertion de données non conformes possible).
+- **Correction** : middleware `validate(schema)` (400 + détails) et schémas Joi (register, login, createOrder, updateStock), appliqués sur `/auth/*`, `POST /orders`, `PUT /products/:id/stock`.
+- **Vérification** : `node --check` OK ; lint OK.
+
+### 15. JWT en cookie HTTPOnly
+
+- **Commit** : `6274d44` — `feat(auth): stocke le JWT dans un cookie HTTPOnly (fini localStorage)`
+- **Fichiers** : `backend/{server.js,controllers/authController.js,middlewares/authMiddleware.js,routes/authRoutes.js}` + front (`services/*`, `pages/Login.js`, `pages/Register.js`, `components/{ProtectedRoute,AdminRoute,Navbar}.js`)
+- **Problème** : token JWT stocké en `localStorage` (exposé au XSS) ; URLs d'API codées en dur dans Login/Register.
+- **Correction** : cookie HTTPOnly (secure en prod), middleware lisant le cookie, route `POST /auth/logout`, CORS `credentials: true`, front en `withCredentials` sans token en localStorage ; URLs via le service partagé.
+- **Vérification** : syntaxe backend OK ; JSX validé (esbuild).
+
+### 16. Journalisation avec Winston
+
+- **Commit** : `9255a91` — `feat(logging): journalisation centralisee avec Winston`
+- **Fichiers** : `backend/config/logger.js`, `backend/{server.js,config/db.js,seeder.js,controllers/*}`, `.gitignore`
+- **Problème** : logs via `console.*` uniquement (consigne Winston non satisfaite).
+- **Correction** : logger Winston (console + fichiers `error.log` / `combined.log`, niveau `LOG_LEVEL`) ; `console.*` remplacés dans le backend ; `logs/` ignoré par git.
+- **Vérification** : `node --check` OK ; lint OK.
+
+### 17. Messages temporaires avec connect-flash
+
+- **Commit** : `ec5c4dc` — `feat(flash): messages temporaires via connect-flash`
+- **Fichiers** : `backend/server.js`, `backend/routes/messages.js`, `backend/controllers/{authController,orderController}.js`, `.env.example`, `docker-compose*.yml`, front `services/api.js` + `pages/Login.js`
+- **Problème** : messages d'événement non gérés du backend vers le client (consigne connect-flash).
+- **Correction** : express-session + connect-flash, flash sur login/register/logout/commande, endpoint `GET /api/messages` (renvoie puis vide), affichage du message après connexion ; `SESSION_SECRET` ajouté.
+- **Vérification** : syntaxe + JSX OK ; `docker compose config` OK.
+
+### 18. Mise à jour des dépendances
+
+- **Commit** : `39ce46f` — `chore(deps): met a jour les dependances (npm audit)`
+- **Fichiers** : `package-lock.json` (backend, gateway, notifications, stock-management, frontend), `microservices/notifications/package.json`
+- **Problème** : vulnérabilités de dépendances (dont `nodemailer` en high).
+- **Correction** : `npm audit fix` sur les services + frontend ; `nodemailer` `^6.9.16` → `10.3.1`.
+- **Vérification** : services déployés = 0 vulnérabilité prod ; reliquat frontend (react-scripts, build-time) documenté.
+
 ---
 
 ## Modèle de partie
