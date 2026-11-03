@@ -85,6 +85,8 @@ un homeserver, exposee via le domaine `symnodes.com`.
 | 2026-11-03 | `e6255af` | build(compose): monte les configurations en repertoire et transmet ADMIN_* |
 | 2026-11-03 | `67630bf` | feat(deploy): script de redeploiement idempotent et admin auto-cree |
 | 2026-11-03 | `66af5a6` | docs: documente le premier demarrage, les comptes admin et les 4 corrections |
+| 2026-11-03 | `861001a` | feat(monitoring): dashboard Grafana provisionne pour la vue d'ensemble |
+| 2026-11-03 | `e2635f0` | docs: documente le dashboard Grafana et la correction 35 |
 | 2026-11-03 | `3ad717e` | chore(env): aligne les valeurs d'exemple du .env.example |
 | 2026-11-03 | `201dbbc` | docs(readme): corrige la zone DNS (enregistrements + serie SOA) |
 | 2026-11-03 | `b7b5645` | docs(rendu): coche la checklist et ajoute les captures d'ecran |
@@ -92,8 +94,11 @@ un homeserver, exposee via le domaine `symnodes.com`.
 | 2026-11-03 | `5484086` | docs(readme): restaure l'apex et les proprietaires explicites de la zone DNS |
 | 2026-11-03 | `9b350fe` | docs(rapport): aligne la zone DNS et l'exposition de la supervision |
 | 2026-11-03 | `a611c52` | docs: complete le registre des corrections (n 35 a 38) |
+| 2026-11-03 | `20b5b83` | docs(rendu): regenere les sequences depuis l'historique git |
+| 2026-11-03 | `5041dfe` | fix(ci): saute le deploiement si les secrets SSH sont absents |
+| 2026-11-03 | `8a52b25` | merge: synchronise avec origin/main (registre 35-38, fix CI, RENDU avec captures) |
 
-_Séquences générées automatiquement depuis l'historique git le 2026-11-03T14:25:14.768Z (59 commits)._
+_Séquences générées automatiquement depuis l'historique git le 2026-11-03T14:43:35.718Z (64 commits)._
 <!-- AUTO:SEQUENCES:END -->
 
 ## 4. Captures d'écran
