@@ -1,11 +1,12 @@
 # Stack de SUPERVISION (E26) — Prometheus + Grafana + Alertmanager + exporters.
 #
-# - Se greffe sur le réseau applicatif de la prod (symnodes-app) pour scraper le backend.
-# - Grafana, Prometheus et Alertmanager rejoignent le réseau proxy (traefik-proxy)
-#   pour être exposés publiquement par Caddy sur des sous-domaines.
-# - node-exporter / cAdvisor / blackbox restent internes.
+# À lancer avec un NOM DE PROJET DISTINCT (pour ne pas mélanger avec la prod) :
+#   docker compose -p symnodes-monitoring -f docker-compose.monitoring.yml up -d
 #
-# Lancement : docker compose -f docker-compose.monitoring.yml up -d
+# - Aucun port hôte n'est exposé : tout passe par le réseau Docker.
+#   Les interfaces publiques (Caddy) joignent les services par leur nom.
+# - Se greffe sur symnodes-app (scrape du backend) et traefik-proxy (exposition Caddy).
+# - node-exporter / cAdvisor / blackbox restent internes au réseau monitoring.
 services:
 
   prometheus:
@@ -17,8 +18,6 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
       - prometheus-data:/prometheus
-    ports:
-      - "127.0.0.1:9090:9090"
     networks:
       - monitoring
       - app
@@ -37,8 +36,6 @@ services:
       - EMAIL_APPLICATION_PASSWORD=${EMAIL_APPLICATION_PASSWORD}
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    ports:
-      - "127.0.0.1:9093:9093"
     networks:
       - monitoring
       - proxy
@@ -50,8 +47,6 @@ services:
     pid: host
     volumes:
       - /:/host:ro,rslave
-    ports:
-      - "127.0.0.1:9100:9100"
     networks:
       - monitoring
 
@@ -63,8 +58,6 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    ports:
-      - "127.0.0.1:8080:8080"
     networks:
       - monitoring
 
@@ -83,8 +76,6 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    ports:
-      - "127.0.0.1:3000:3000"
     networks:
       - monitoring
       - proxy

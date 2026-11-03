@@ -152,7 +152,7 @@ Routes front : `/` (accueil) · `/cart` · `/login` · `/register` · `/shippig_
 
 Prometheus et Alertmanager sont protégés par **basic-auth** (Caddy). Le mot de passe se
 règle via le hash dans `Caddyfile` (`docker compose exec caddy caddy hash-password --plaintext '...'`).
-Accès local possible aussi sur `127.0.0.1:3000/9090/9093` (serveur ou tunnel SSH).
+Lancement : `docker compose -p symnodes-monitoring -f docker-compose.monitoring.yml up -d` (nom de projet distinct ; aucun port hôte exposé, tout passe par le réseau Docker).
 
 > Couvert par l'enregistrement wildcard `*` de la zone DNS (`@` pour l'apex).
 
