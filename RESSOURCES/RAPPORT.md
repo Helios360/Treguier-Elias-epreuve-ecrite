@@ -33,7 +33,7 @@ et réutilisation d'un accès réseau déjà sécurisé par VPN. IP statique ⇒
 ```dns
 ; Domain: symnodes.com
 $TTL 3600
-@       IN SOA  ns11.infomaniak.ch. hostmaster.infomaniak.ch. (2026110301 10800 3600 605800 3600)
+@       IN SOA  ns11.infomaniak.ch. hostmaster.infomaniak.ch. (2026110302 10800 3600 605800 3600)
 @       3600 IN NS   ns11.infomaniak.ch.
 @       3600 IN NS   ns12.infomaniak.ch.
 
@@ -129,7 +129,9 @@ dépôt ; la clé SSH est posée par l'administrateur serveur.
 - Sondes HTTP sur `symnodes.com` et `preprod.symnodes.com`.
 - Alertes : indisponibilité d'une cible, échec de sonde HTTP, CPU/RAM/disque élevés ;
   notification par email (Alertmanager → SMTP).
-- Interfaces bindées en local (accès via VPN / tunnel SSH), jamais publiques.
+- Interfaces exposées sur des sous-domaines (`grafana.` / `prometheus.` / `alertmanager.symnodes.com`),
+  Prometheus et Alertmanager protégés par **basic-auth** (Caddy). Aucun port hôte publié :
+  tout transite par le réseau Docker, l'administration serveur restant derrière le VPN.
 
 ## 8. Correction des anomalies (E27)
 

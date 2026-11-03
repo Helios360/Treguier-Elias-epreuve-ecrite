@@ -353,7 +353,53 @@
   conforme` au second ; les 5 URLs répondent 200 / 200 / 302 / 401 / 401 ; catalogue intact
   (5 produits) ; `npm run lint` sans erreur.
 
-### 35. Dashboard Grafana provisionné pour la vue d'ensemble
+### 35. Retrait des ports hôte de la supervision et nom de projet explicite
+
+- **Commit** : `36bb2e1` — `fix(monitoring): retire les ports hote (conflits) et documente le nom de projet`
+- **Fichiers** : `docker-compose.monitoring.yml`, `README.md`
+- **Problème** : la stack de supervision publiait des ports sur l'hôte, en conflit avec des
+  services déjà en écoute, et se mélangeait aux conteneurs de production faute de nom de projet
+  distinct.
+- **Correction** : suppression des ports hôte (tout passe par le réseau Docker, exposition via
+  Caddy) ; lancement documenté avec `-p symnodes-monitoring`.
+- **Vérification** : `docker compose config` OK ; interfaces joignables uniquement via le proxy.
+
+### 36. Configuration Alertmanager rendue au démarrage
+
+- **Commit** : `7763f7a` — `fix(monitoring): Alertmanager rend sa config au demarrage (flag expand-env inexistant)`
+- **Fichiers** : `monitoring/alertmanager/entrypoint.sh`, `monitoring/alertmanager/alertmanager.template.yml`, `docker-compose.monitoring.yml`
+- **Problème** : la configuration Alertmanager reposait sur un mécanisme d'expansion de variables
+  inexistant (le flag `--config.expand-env` n'existe que pour Prometheus) ; le conteneur bouclait
+  au démarrage.
+- **Correction** : la config devient un template (`alertmanager.template.yml`), substitué par un
+  `entrypoint.sh` (`sed`) vers `/alertmanager/alertmanager.yml` avant de lancer Alertmanager.
+- **Vérification** : conteneur `alertmanager` stable ; configuration effectivement générée.
+
+### 37. Zone DNS : wildcard, apex et documentation alignés (E23)
+
+- **Commits** : `ccdf6d0` (wildcard apex + `*`), `201dbbc` puis `5484086` (correction finale des
+  propriétaires d'enregistrements et restauration de l'apex)
+- **Fichiers** : `README.md`, `RESSOURCES/RAPPORT.md`
+- **Problème** : la zone éditée devait couvrir l'apex **et** le wildcard ; un passage intermédiaire
+  avait produit un bloc dont les enregistrements à propriétaire vide se rattachaient au wildcard,
+  et où l'enregistrement `A` de l'apex avait disparu — zone ambiguë et apex non résolu.
+- **Correction** : zone unifiée dans README et RAPPORT — `@ A` (apex), `* A` (couvre `www`,
+  `preprod`, `grafana`, `prometheus`, `alertmanager`), NS/SPF/DMARC conservés, serial SOA incrémenté.
+- **Vérification** : les deux documents présentent une zone identique ; l'apex et les sous-domaines
+  répondent (200 / 401).
+
+### 38. Documentation du premier démarrage et des comptes admin
+
+- **Commit** : `66af5a6` — `docs: documente le premier demarrage, les comptes admin et les 4 corrections`
+- **Fichier** : `README.md`
+- **Problème** : ni la procédure de premier démarrage (build, seed, pré-prod, supervision) ni la
+  création automatique des comptes (Mongo, Grafana, admin applicatif, basic-auth) n'étaient
+  documentées pour un tiers.
+- **Correction** : sections « Premier démarrage », « Comptes administrateur — création automatique »
+  et « Dépannage » ajoutées au README.
+- **Vérification** : procédure relue ; commandes conformes aux fichiers compose.
+
+### 39. Dashboard Grafana provisionné pour la vue d'ensemble
 
 - **Commit** : `861001a` — `feat(monitoring): dashboard Grafana provisionne pour la vue d'ensemble`
 - **Fichiers** : `monitoring/grafana/provisioning/dashboards/default.yml`,
