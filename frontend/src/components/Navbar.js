@@ -2,37 +2,37 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { logout } from '../services/api';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { cart } = useCart();
 
-  // Simuler l'état d'authentification avec le localStorage
-  const isAuthenticated = !!localStorage.getItem('token');
-  const username = localStorage.getItem('username'); // Récupère le nom d'utilisateur si connecté
+  const isAuthenticated = !!localStorage.getItem('username');
+  const username = localStorage.getItem('username');
 
-  const handleLogout = () => {
-    // Supprimer les informations d'authentification
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try {
+      await logout(); // supprime le cookie HTTPOnly côté serveur
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion', error);
+    }
     localStorage.removeItem('username');
+    localStorage.removeItem('role');
     navigate('/login');
   };
 
   return (
     <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold">Mon Application</Link>
+        <Link to="/" className="text-xl font-bold">
+          Mon Application
+        </Link>
       </div>
-      
+
       <div className="flex items-center space-x-4">
-        {/* Afficher le nom de l'utilisateur s'il est connecté */}
-        {isAuthenticated && (
-          <span className="font-semibold">
-            Bonjour, {username}
-          </span>
-        )}
-        
-        {/* Lien vers le Panier avec le nombre d'articles */}
+        {isAuthenticated && <span className="font-semibold">Bonjour, {username}</span>}
+
         <Link to="/cart" className="relative">
           <span>Panier</span>
           {cart.length > 0 && (
@@ -41,8 +41,7 @@ const Navbar = () => {
             </span>
           )}
         </Link>
-        
-        {/* Lien Connexion / Déconnexion */}
+
         {!isAuthenticated ? (
           <>
             <Link to="/login">Connexion</Link>

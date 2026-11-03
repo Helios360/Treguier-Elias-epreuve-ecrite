@@ -2,20 +2,19 @@
 const jwt = require('jsonwebtoken');
 
 exports.authenticateToken = (req, res, next) => {
-
-  const token = req.headers['authorization']?.split(' ')[1];
+  // Token lu en priorité dans le cookie HTTPOnly, sinon dans l'en-tête Authorization
+  const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1];
   if (!token) return res.sendStatus(401);
 
   try {
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
-        console.error('Erreur de vérification du token upd');
-        return res.status(403).json({ error: true, message: 'Token invalide upd' });
+        return res.status(403).json({ error: true, message: 'Token invalide' });
       }
       req.user = user;
       next();
     });
-  } catch (error) { 
+  } catch (error) {
     return res.status(403).json({ error: true, message: 'Token invalide' });
   }
 };

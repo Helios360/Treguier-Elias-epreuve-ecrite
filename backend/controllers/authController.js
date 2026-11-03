@@ -3,9 +3,15 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User'); // modèle utilisateur
 require('dotenv').config();
-const axios = require('axios');
-const authLog = require('debug')('authRoutes:console')
-//const sendEmail = require('../services/emailService');
+const authLog = require('debug')('authRoutes:console');
+
+const COOKIE_NAME = 'token';
+const COOKIE_OPTIONS = {
+  httpOnly: true, // inaccessible au JavaScript client (protection XSS)
+  secure: process.env.NODE_ENV === 'production', // HTTPS uniquement en prod
+  sameSite: 'lax',
+  maxAge: 60 * 60 * 1000, // 1 heure (aligné sur l'expiration du JWT)
+};
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -18,14 +24,23 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Mot de passe incorrect' });
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
 
-    res.json({ token, role: user.role, username: user.username });
+    // Le token est transmis via un cookie HTTPOnly (jamais exposé au JavaScript client)
+    res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+
+    res.json({ role: user.role, username: user.username });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
+exports.logout = (req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.json({ message: 'Déconnexion réussie.' });
+};
 
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -43,22 +58,9 @@ exports.register = async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
-    // Envoyer un email de bienvenue
-    // await sendEmail(
-    //   email,
-    //   'Bienvenue dans notre application',
-    //   `Bonjour ${username},\n\nMerci de vous être inscrit. Nous sommes ravis de vous accueillir !`
-    // );
-
-    // await axios.post('http://localhost:4002/notify', {
-    //   to: email,
-    //   subject: 'Bienvenue dans notre application',
-    //   text: `Bonjour ${username},\n\nMerci de vous être inscrit. Nous sommes ravis de vous accueillir !`,
-    // });
-
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {
-    console.error('Erreur lors de l\'inscription', error);
+    console.error("Erreur lors de l'inscription", error);
     res.status(500).json({ message: 'Une erreur est survenue.' });
   }
 };
