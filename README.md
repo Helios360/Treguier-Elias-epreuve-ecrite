@@ -184,13 +184,13 @@ Domaine `symnodes.com` chez Infomaniak. IP publique **statique** ⇒ enregistrem
 
 ```dns
 $TTL 3600
-@           IN SOA ns11.infomaniak.ch. hostmaster.infomaniak.ch. (2026110302 10800 3600 605800 3600)
-*      3600 IN A   176.176.123.209
-       3600 IN A   176.176.123.209
-       3600 IN NS  ns11.infomaniak.ch.
-       3600 IN NS  ns12.infomaniak.ch.
-       3600 IN TXT "v=spf1 -all"
-_dmarc 3600 IN TXT "v=DMARC1; p=reject;"
+@       IN SOA  ns11.infomaniak.ch. hostmaster.infomaniak.ch. (2026110302 10800 3600 605800 3600)
+@       3600 IN NS   ns11.infomaniak.ch.
+@       3600 IN NS   ns12.infomaniak.ch.
+@       3600 IN A    176.176.123.209
+*       3600 IN A    176.176.123.209
+@       3600 IN TXT  "v=spf1 -all"
+_dmarc  3600 IN TXT  "v=DMARC1; p=reject;"
 ```
 
 ## Structure des Dockerfiles
