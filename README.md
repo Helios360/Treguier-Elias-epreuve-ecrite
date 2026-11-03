@@ -15,6 +15,7 @@ Application e-commerce **MERN** conteneurisée, à mettre en production et à ma
 - [Variables d'environnement](#variables-denvironnement)
 - [DNS / domaine](#dns--domaine)
 - [Structure des Dockerfiles](#structure-des-dockerfiles)
+- [Liens utiles](#liens-utiles)
 - [Documentation](#documentation)
 
 ---
@@ -126,6 +127,52 @@ frontend/Dockerfile              (+ frontend/nginx.conf)
 
 Un unique Dockerfile à la racine ne conviendrait pas : chaque service a sa propre base,
 son `CMD` et son contexte. Docker recommande un Dockerfile par contexte de build.
+
+## Liens utiles
+
+### Application
+
+| Cible | URL |
+|-------|-----|
+| Production | https://symnodes.com |
+| Pré-production | https://preprod.symnodes.com |
+| Interface d'administration | https://symnodes.com/admin *(compte de rôle `admin` requis)* |
+| Admin (pré-prod) | https://preprod.symnodes.com/admin |
+| API (exemple) | https://symnodes.com/api/products |
+| Documentation d'API | `doc/API.md` |
+
+Routes front : `/` (accueil) · `/cart` · `/login` · `/register` · `/shippig_payment` · `/order` · `/admin`.
+
+### Supervision (E26) — accès local / VPN uniquement, non exposé publiquement
+
+Interfaces liées à `127.0.0.1` sur le serveur. Depuis un poste, tunnel SSH :
+
+```bash
+ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 user@<homeserver>
+# puis : http://localhost:3000 (Grafana) · :9090 (Prometheus) · :9093 (Alertmanager)
+```
+
+| Service | URL locale | Identifiants |
+|---------|-----------|--------------|
+| Grafana | http://127.0.0.1:3000 | `admin` / `$GRAFANA_ADMIN_PASSWORD` |
+| Prometheus | http://127.0.0.1:9090 | — |
+| Alertmanager | http://127.0.0.1:9093 | — |
+| cAdvisor | http://127.0.0.1:8080 | — |
+
+### Interne (dans le réseau Docker)
+
+| Service | Cible |
+|---------|-------|
+| Backend (API) | `backend:5000` |
+| Métriques Prometheus | `backend:5000/metrics` |
+| Gateway | `gateway:8000` |
+| Notifications | `notifications:4002` |
+| Stock | `stock-management:4003` |
+| MongoDB | `mongo:27017` |
+
+### CI/CD
+
+Pipeline GitHub Actions : onglet **Actions** du dépôt (`.github/workflows/ci.yml`).
 
 ## Documentation
 
