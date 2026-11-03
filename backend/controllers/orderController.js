@@ -6,6 +6,7 @@ const orderLog = require('debug')('orderRoutes:console')
 // URL du gateway (point d'entrée des microservices), configurable par environnement
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8000';
 const logger = require('../config/logger');
+const audit = require('../config/audit');
 
 
 exports.createOrder = async (req, res) => {
@@ -59,6 +60,7 @@ exports.createOrder = async (req, res) => {
     const savedOrder = await newOrder.save();
 
     logger.debug('Commande sauvegardée :', savedOrder);
+    audit.log('order_created', { orderId: savedOrder._id, userId, total });
 
     // Appel au micro-service de notification
     try {
@@ -157,6 +159,7 @@ exports.deleteOrder = async (req, res) => {
     if (!deletedOrder) {
       return res.status(404).json({ message: 'Commande non trouvée.' });
     }
+    audit.log('order_deleted', { orderId: id, by: req.user?.userId });
     res.status(200).json({ message: `Commande ${id} supprimée avec succès.` });
   } catch (error) {
     logger.error('Erreur lors de la suppression de la commande', error);
@@ -182,6 +185,7 @@ exports.validateOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: 'Commande non trouvée.' });
     }
+    audit.log('order_validated', { orderId: id, by: req.user?.userId });
     res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
   } catch (error) {
     logger.error('Erreur lors de la validation de la commande', error);
@@ -211,6 +215,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Commande non trouvée." });
     }
 
+    audit.log('order_status_changed', { orderId, status, by: req.user?.userId });
     res.status(200).json({ message: "Statut mis à jour avec succès", order });
   } catch (error) {
     logger.error("Erreur lors de la mise à jour de la commande :", error);

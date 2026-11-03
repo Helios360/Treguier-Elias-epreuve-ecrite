@@ -5,6 +5,7 @@ const User = require('../models/User'); // modèle utilisateur
 require('dotenv').config();
 const authLog = require('debug')('authRoutes:console');
 const logger = require('../config/logger');
+const audit = require('../config/audit');
 
 const COOKIE_NAME = 'token';
 const COOKIE_OPTIONS = {
@@ -21,12 +22,14 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
+      audit.log('login_failed', { username, reason: 'user_not_found', ip: req.ip });
       req.flash('error', 'Utilisateur non trouvé');
       return res.status(400).json({ message: 'Utilisateur non trouvé' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      audit.log('login_failed', { username, reason: 'bad_password', ip: req.ip });
       req.flash('error', 'Mot de passe incorrect');
       return res.status(400).json({ message: 'Mot de passe incorrect' });
     }
@@ -37,6 +40,7 @@ exports.login = async (req, res) => {
 
     // Le token est transmis via un cookie HTTPOnly (jamais exposé au JavaScript client)
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+    audit.log('login_success', { username: user.username, role: user.role, ip: req.ip });
     req.flash('success', 'Connexion réussie.');
 
     res.json({ role: user.role, username: user.username });
@@ -47,6 +51,7 @@ exports.login = async (req, res) => {
 
 exports.logout = (req, res) => {
   res.clearCookie(COOKIE_NAME);
+  audit.log('logout', { ip: req.ip });
   req.flash('success', 'Déconnexion réussie.');
   res.json({ message: 'Déconnexion réussie.' });
 };
@@ -60,6 +65,7 @@ exports.register = async (req, res) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
+      audit.log('register_failed', { email, reason: 'email_exists', ip: req.ip });
       req.flash('error', 'Cet email est déjà utilisé.');
       return res.status(400).json({ message: 'Cet email est déjà utilisé.' });
     }
@@ -68,6 +74,7 @@ exports.register = async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
+    audit.log('register_success', { username, email, ip: req.ip });
     req.flash('success', 'Utilisateur créé avec succès.');
     res.status(201).json({ message: 'Utilisateur créé avec succès.' });
   } catch (error) {

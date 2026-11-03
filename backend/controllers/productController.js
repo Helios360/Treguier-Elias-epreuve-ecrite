@@ -1,6 +1,7 @@
 // controllers/productController.js
 const Product = require('../models/Product');
 const logger = require('../config/logger');
+const audit = require('../config/audit');
 
 exports.getProducts = async (req, res) => {
     const products = await Product.find();
@@ -26,6 +27,7 @@ exports.updateProductStock = async (req, res) => {
   
       await product.save();
   
+      audit.log('stock_updated', { productId, stock, by: req.user?.userId });
       res.json({ message: "Stock mis à jour avec succès.", product });
     } catch (error) {
       logger.error("Erreur lors de la mise à jour du stock :", error);
