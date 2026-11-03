@@ -108,10 +108,9 @@ _Séquences générées automatiquement depuis l'historique git le 2026-11-03T14
 - [x] Interface d'administration*
 ![alt text](image-2.png)
 - [x] Dashboard Grafana / supervision
-![alt text](image-3.png)
+![alt text](image-5.png)
 - [x] Pipeline CI/CD (GitHub Actions)
-![alt text](image-4.png)
-
+![alt text](image-6.png)
 
 ## 5. Accès et identifiants
 
