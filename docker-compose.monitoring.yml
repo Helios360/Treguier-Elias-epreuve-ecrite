@@ -14,9 +14,14 @@ services:
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
+      # Les consoles de l'image vivent dans /usr/share/prometheus : on les référence
+      # en absolu car le montage de répertoire ci-dessous masque les liens
+      # symboliques que l'image plaçait dans /etc/prometheus.
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      # Répertoire plutôt que fichiers individuels (cf. commentaire dans docker-compose.yml).
+      - ./monitoring/prometheus:/etc/prometheus:ro
       - prometheus-data:/prometheus
     networks:
       - monitoring
@@ -26,15 +31,16 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.27.0
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    entrypoint: ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]
     environment:
       - ALERT_EMAIL=${ALERT_EMAIL}
       - SMTP_SMARTHOST=${SMTP_SMARTHOST}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_APPLICATION_PASSWORD=${EMAIL_APPLICATION_PASSWORD}
     volumes:
-      - ./monitoring/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml:ro
-      - ./monitoring/alertmanager/entrypoint.sh:/entrypoint.sh:ro
+      # Répertoire plutôt que fichiers individuels (cf. commentaire dans docker-compose.yml).
+      # Le script génère la config finale dans /alertmanager/ (répertoire inscriptible de l'image).
+      - ./monitoring/alertmanager:/etc/alertmanager:ro
     networks:
       - monitoring
       - proxy

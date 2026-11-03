@@ -10,7 +10,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Montage du RÉPERTOIRE, pas du fichier : un bind mount de fichier unique reste
+      # épinglé sur l'ancien inode quand `git` remplace le fichier (rename → nouvel
+      # inode), et `caddy reload` relit alors une version périmée ("config is
+      # unchanged"). Le montage de répertoire suit les remplacements de fichiers.
+      - ./caddy:/etc/caddy:ro
       - caddy-data:/data
     networks:
       - proxy
@@ -45,6 +49,12 @@ services:
       - CORS_ORIGIN=${DOMAIN_URL}
       - NOTIFY_RECIPIENT=${NOTIFY_RECIPIENT}
       - SESSION_SECRET=${SESSION_SECRET}
+      # Compte admin applicatif — consommé par seed-admin.js et seeder.js.
+      # Sans ces lignes, les variables du .env n'atteignaient pas le conteneur et
+      # le seed retombait silencieusement sur admin/admin1234.
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin1234}
     depends_on:
       mongo:
         condition: service_healthy
