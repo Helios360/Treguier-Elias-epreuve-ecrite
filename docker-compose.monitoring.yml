@@ -26,16 +26,15 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.27.0
     restart: unless-stopped
-    command:
-      - --config.file=/etc/alertmanager/alertmanager.yml
-      - --config.expand-env=true
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     environment:
       - ALERT_EMAIL=${ALERT_EMAIL}
       - SMTP_SMARTHOST=${SMTP_SMARTHOST}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_APPLICATION_PASSWORD=${EMAIL_APPLICATION_PASSWORD}
     volumes:
-      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./monitoring/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml:ro
+      - ./monitoring/alertmanager/entrypoint.sh:/entrypoint.sh:ro
     networks:
       - monitoring
       - proxy

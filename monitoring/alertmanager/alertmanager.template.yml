@@ -1,5 +1,6 @@
-# Alertmanager — routage des alertes vers l'email (SMTP Gmail).
-# Les variables ${...} sont développées par --config.expand-env=true.
+# Alertmanager — modèle de configuration.
+# Les variables ${...} sont substituées AU DÉMARRAGE par monitoring/alertmanager/entrypoint.sh
+# (Alertmanager n'expanse pas les variables d'environnement nativement).
 route:
   receiver: email
   group_by: ['alertname']
