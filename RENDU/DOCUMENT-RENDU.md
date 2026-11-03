@@ -66,8 +66,10 @@ un homeserver, exposee via le domaine `symnodes.com`.
 | 2026-11-03 | `5079160` | feat(monitoring): supervision et alertes (E26) |
 | 2026-11-03 | `865e981` | chore(security): script de durcissement de l'hote (E22) |
 | 2026-11-03 | `8931a1f` | docs(api): generation automatique de la doc d'API depuis le code (E29) |
+| 2026-11-03 | `44527a5` | docs(rendu): document de rendu auto-genere (hors RESSOURCES) |
+| 2026-11-03 | `ab0c0a5` | docs: registre des corrections (fournee 4, C19..C26) + rapport complet + README |
 
-_Séquences générées automatiquement depuis l'historique git le 2026-11-03T10:36:36.825Z (33 commits)._
+_Séquences générées automatiquement depuis l'historique git le 2026-11-03T10:37:07.629Z (35 commits)._
 <!-- AUTO:SEQUENCES:END -->
 
 ## 4. Captures d'écran

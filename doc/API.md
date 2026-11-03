@@ -16,4 +16,4 @@
 | GET | `/api/products` | getProducts |
 | PUT | `/api/products/:productId/stock` | authenticateToken, isAdmin, validate(updateStockSchema), updateProductStock |
 
-_Généré le 2026-11-03T10:36:21.310Z_
+_Généré le 2026-11-03T10:37:07.474Z_
