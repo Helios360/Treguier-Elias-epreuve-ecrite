@@ -62,6 +62,9 @@ for f in caddy/Caddyfile \
          monitoring/grafana/provisioning; do
   [ -e "$f" ] || die "Fichier/dossier de configuration manquant : $f"
 done
+# Grafana s'exécute en UID 472 : un fichier de provisioning laissé en 600 côté hôte
+# provoque « permission denied » au démarrage et fait boucler le conteneur.
+chmod -R a+r monitoring/grafana/provisioning
 ok "Configurations présentes"
 
 # --- 3. Stack de production ----------------------------------------------

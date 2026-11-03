@@ -1,7 +1,10 @@
 apiVersion: 1
 
 datasources:
+  # `uid` fixé : les dashboards provisionnés y font référence explicitement,
+  # ce qui évite de dépendre d'un identifiant généré au premier démarrage.
   - name: Prometheus
+    uid: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
