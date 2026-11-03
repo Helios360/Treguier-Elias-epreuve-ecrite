@@ -254,6 +254,22 @@
 - **Correction** : `RENDU/DOCUMENT-RENDU.md` (infra, séquences, captures, accès) dont la section « Séquences » est générée depuis l'historique git (marqueurs AUTO) ; script npm `rendu`. Distinct de `RESSOURCES/`.
 - **Vérification** : génération OK (33 commits).
 
+### 27. Création du répertoire de logs dans l'image backend
+
+- **Commit** : `88c1593` — `fix(backend): cree le dossier /app/logs avec les droits USER node`
+- **Fichier** : `backend/Dockerfile`
+- **Problème** : le logger Winston écrit dans `/app/logs`, mais l'image backend tournait en `USER node` avec `/app` appartenant à root → échec de création/écriture du répertoire de logs au démarrage en conteneur.
+- **Correction** : `RUN mkdir -p /app/logs && chown node:node /app/logs` avant `USER node`.
+- **Vérification** : Dockerfile relu ; build/runtime à confirmer côté serveur (non testé ici).
+
+### 28. Loggers structurés pour le gateway et les microservices
+
+- **Commit** : `6cdab74` — `fix(logging): logger structure pour les microservices et le gateway`
+- **Fichiers** : `gateway/logger.js`, `gateway/server.js`, `microservices/notifications/{logger.js,index.js}`, `microservices/stock-management/{logger.js,index.js}`
+- **Problème** : le gateway et les microservices journalisaient encore via `console.*`, en incohérence avec la journalisation structurée du backend.
+- **Correction** : logger JSON structuré (sans dépendance externe) par service, substitué à `console.*`.
+- **Vérification** : `node --check` OK ; aucun `console.*` restant hors `logger.js` ; lint OK.
+
 ---
 
 ## Modèle de partie
