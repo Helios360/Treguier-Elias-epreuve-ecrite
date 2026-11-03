@@ -187,6 +187,73 @@
 - **Correction** : `npm audit fix` sur les services + frontend ; `nodemailer` `^6.9.16` → `10.3.1`.
 - **Vérification** : services déployés = 0 vulnérabilité prod ; reliquat frontend (react-scripts, build-time) documenté.
 
+
+## Fournée 4 — finalisation (E22, E24, E25, E26, E27, E29)
+
+### 19. Suppression du code mort
+
+- **Commit** : `7977b62` — `refactor: supprime le code mort (doublons admin, microservice vide, fichiers orphelins)`
+- **Fichiers** : `backend/routes/adminRoutes.js`, `backend/controllers/adminController.js`, `gateway/routes/notif.js`, `gateway/routes/auth.js`, `microservices/auth-gateway/`, `frontend/src/components/ProductList.js` (supprimés)
+- **Problème** : code mort et doublons — `adminRoutes`/`adminController` jamais montés (l'admin passe par `/api/orders`), `notif.js` vide, `auth-gateway` vide, `components/ProductList.js` orphelin (copie de ProtectedRoute).
+- **Correction** : suppression. L'interface d'administration reste fonctionnelle (via `Admin.js` + `adminApi` + `orderRoutes`/`productRoutes`).
+- **Vérification** : plus aucune référence (grep) ; lint 0 erreur.
+
+### 20. Gestion du stock dans le microservice dédié
+
+- **Commit** : `946c5ea` — `feat(stock): gere le stock en base dans le microservice dedie`
+- **Fichiers** : `microservices/stock-management/index.js` + `package.json`, `backend/controllers/orderController.js`, `docker-compose*.yml`
+- **Problème** : la mise à jour du stock à la commande était commentée ; le microservice ne faisait que logguer.
+- **Correction** : `stock-management` se connecte à MongoDB et décrémente le stock (`POST /update-stock`, `GET /stock/:id`) ; `createOrder` appelle le microservice via le gateway ; `MONGO_URI` ajouté au compose.
+- **Vérification** : `node --check` OK ; `docker compose config` OK.
+
+### 21. Pipeline CI/CD GitHub Actions + tests
+
+- **Commit** : `173bf95` — `ci: pipeline GitHub Actions + tests`
+- **Fichiers** : `.github/workflows/ci.yml`, `backend/validation/schemas.test.js`, `frontend/src/context/CartContext.test.js`, `frontend/src/App.test.js` (supprimé)
+- **Problème** : aucun CI/CD ni test (E24).
+- **Correction** : workflow (lint, tests backend/frontend, build des images, déploiement pré-prod sur `main` et prod sur tag `v*`) ; tests Joi (node:test) et cartReducer (jest).
+- **Vérification** : tests backend 6/6 en local ; YAML valide. (Déploiement à activer une fois les secrets SSH posés par l'admin serveur.)
+
+### 22. Piste d'audit applicative
+
+- **Commit** : `c59f667` — `feat(audit): piste d'audit applicative (E25)`
+- **Fichiers** : `backend/config/audit.js`, `backend/controllers/{auth,product,order}Controller.js`
+- **Problème** : aucun outil d'audit (E25).
+- **Correction** : logger d'audit dédié (`logs/audit.log`, JSON) traçant login (succès/échec), logout, inscription, création/suppression/validation/statut de commande, mise à jour de stock.
+- **Vérification** : `node --check` OK ; lint 0 erreur.
+
+### 23. Supervision et alertes
+
+- **Commit** : `5079160` — `feat(monitoring): supervision et alertes (E26)`
+- **Fichiers** : `backend/config/metrics.js`, `backend/server.js`, `monitoring/…`, `docker-compose.monitoring.yml`, `docker-compose.yml`, `.env.example`
+- **Problème** : aucune supervision ni alerte (E26).
+- **Correction** : instrumentation `prom-client` (`/metrics`) ; stack Prometheus + Grafana + Alertmanager + node-exporter + cAdvisor + blackbox ; règles d'alerte (InstanceDown, sonde HTTP, CPU/RAM/disque) ; alertes par email ; interfaces bindées en local (accès VPN/tunnel).
+- **Vérification** : `docker compose config` OK ; lint OK. (Stack non démarrée ici.)
+
+### 24. Durcissement de l'hôte
+
+- **Commit** : `865e981` — `chore(security): script de durcissement de l'hote (E22)`
+- **Fichiers** : `scripts/harden-host.sh`
+- **Problème** : hôte non durci (E22).
+- **Correction** : script (ufw refus par défaut + 22/443, SSH par clé, fail2ban, auditd, MAJ auto) à exécuter en root sur le serveur.
+- **Vérification** : `bash -n` OK. (Non exécuté ici ; hypothèse APT documentée.)
+
+### 25. Documentation d'API générée
+
+- **Commit** : `8931a1f` — `docs(api): generation automatique de la doc d'API depuis le code (E29)`
+- **Fichiers** : `scripts/generate-docs.js`, `doc/API.md`, `package.json`
+- **Problème** : documentation non générée depuis le code (E29).
+- **Correction** : générateur extrayant les routes Express → `doc/API.md` ; script npm `docs`.
+- **Vérification** : génération OK (10 routes).
+
+### 26. Document de rendu
+
+- **Commit** : `44527a5` — `docs(rendu): document de rendu auto-genere (hors RESSOURCES)`
+- **Fichiers** : `RENDU/DOCUMENT-RENDU.md`, `scripts/generate-rendu.js`, `package.json`
+- **Problème** : aucun document de rendu.
+- **Correction** : `RENDU/DOCUMENT-RENDU.md` (infra, séquences, captures, accès) dont la section « Séquences » est générée depuis l'historique git (marqueurs AUTO) ; script npm `rendu`. Distinct de `RESSOURCES/`.
+- **Vérification** : génération OK (33 commits).
+
 ---
 
 ## Modèle de partie

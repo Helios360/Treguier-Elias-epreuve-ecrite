@@ -72,3 +72,84 @@ Modifications par rapport à la zone Infomaniak initiale :
   (`symnodes.com` / `www.symnodes.com` → prod, `preprod.symnodes.com` → pré-prod).
 - L'administration (SSH, Docker, commandes de production) reste derrière le **VPN
   WireGuard**, jamais exposée publiquement.
+
+---
+
+## 2. Architecture et conteneurisation
+
+- **Services** : `frontend` (React build → Nginx), `backend` (API Express/Mongoose),
+  `gateway` (proxy `express-http-proxy`), `notifications` (NodeMailer),
+  `stock-management` (gestion du stock en base), `mongo`.
+- **Contexte de build** : chaque service dispose de son `Dockerfile` et `.dockerignore`.
+- **Environnements** : `docker-compose.yml` (prod), `docker-compose.preprod.yml`
+  (pré-prod), `docker-compose.dev.yml` (dev local).
+- **Reverse-proxy** : Caddy (TLS Let's Encrypt automatique) — `symnodes.com`,
+  `www.symnodes.com`, `preprod.symnodes.com`.
+- **Réseaux** : `traefik-proxy` (proxy ↔ frontend), `symnodes-app` (interne applicatif).
+- **Persistance** : volume `mongo-data` ; MongoDB non exposé publiquement.
+
+## 3. Fonctionnalités et points d'effort
+
+- Catalogue produits, panier (Context API : ajout / quantité / retrait / vidage).
+- Tunnel de commande (adresse, transporteur, paiement) puis synthèse et validation.
+- Gestion des rôles `user` / `admin` (JWT).
+- Microservices : notifications email et gestion du stock (décentralisée).
+- Gateway mutualisant l'accès aux microservices.
+- Points techniques travaillés : conteneurisation multi-services, secrets, TLS,
+  validation des entrées, authentification par cookie sécurisé, supervision.
+
+## 4. Sécurité et robustesse (E28)
+
+- Variables d'environnement (`.env`) + `.gitignore` (secrets hors dépôt).
+- Validation des entrées avec **Joi** (auth, commandes, stock).
+- JWT en **cookie HTTPOnly** (`secure` en prod) — plus de token en `localStorage`.
+- Gestion d'erreurs `try/catch` sur les opérations critiques.
+- Messages temporaires via **connect-flash**.
+- Qualité de code : **ESLint** + **Prettier**.
+- Logs via **Winston** ; assistance dev via **Debug**.
+- Dépendances mises à jour (`npm audit`) ; 0 vulnérabilité sur les services déployés.
+
+## 5. Intégration et déploiement continus (E24)
+
+GitHub Actions (`.github/workflows/ci.yml`) : lint, tests backend (`node:test`) et
+frontend (jest), build des images Docker, puis déploiement de la pré-production (sur
+`main`) et de la production (sur tag `v*`) par SSH. Les secrets de déploiement
+(`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`) sont à configurer côté
+dépôt ; la clé SSH est posée par l'administrateur serveur.
+
+## 6. Journalisation et audit (E25)
+
+- Journalisation des services : Winston (`logs/combined.log`, `logs/error.log`).
+- Audit applicatif : piste d'audit dédiée (`logs/audit.log`, JSON) traçant les
+  événements sensibles (authentification, commandes, stock).
+- Audit système (hôte) : `auditd` et `fail2ban` (script `scripts/harden-host.sh`).
+
+## 7. Supervision et alertes (E26)
+
+- Stack : Prometheus + Grafana + Alertmanager + node-exporter + cAdvisor + blackbox-exporter
+  (`docker-compose.monitoring.yml`).
+- Métriques applicatives exposées par le backend sur `/metrics` (prom-client).
+- Sondes HTTP sur `symnodes.com` et `preprod.symnodes.com`.
+- Alertes : indisponibilité d'une cible, échec de sonde HTTP, CPU/RAM/disque élevés ;
+  notification par email (Alertmanager → SMTP).
+- Interfaces bindées en local (accès via VPN / tunnel SSH), jamais publiques.
+
+## 8. Correction des anomalies (E27)
+
+- `deleteOrder` implémenté et route protégée (rôle admin).
+- `validateOrder` persiste le statut ; statut hors enum corrigé.
+- Mise à jour du stock à la commande réactivée, déportée dans le microservice dédié.
+- Nettoyage du code mort (doublons admin, microservice vide, fichier orphelin).
+
+## 9. Documentation (E29)
+
+- Documentation d'API générée depuis le code : `doc/API.md` (`npm run docs`).
+- Journal des évolutions : `RESSOURCES/CORRECTIONS.md` (1 correction = 1 commit).
+- Document de rendu : `RENDU/DOCUMENT-RENDU.md` (séquences générées via `npm run rendu`).
+
+## 10. Conclusion
+
+Le projet est conteneurisé, déployé (production + pré-production), sécurisé (secrets,
+validation, cookie HTTPOnly, TLS), journalisé et supervisé, avec un CI/CD automatisé et
+une documentation générée. Les huit exigences de sécurité/robustesse du cahier des
+charges sont couvertes (voir `RESSOURCES/TABLEAU DE COMPETENCES.md`).

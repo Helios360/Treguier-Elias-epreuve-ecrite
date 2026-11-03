@@ -129,9 +129,8 @@ son `CMD` et son contexte. Docker recommande un Dockerfile par contexte de build
 
 ## Documentation
 
-- `INSTRUCTIONS.md` — consignes de l'épreuve.
-- `RESSOURCES/SOMMAIRE.md` — index des ressources.
-- `RESSOURCES/CAHIER DES CHARGES.md` — consignes converties.
-- `RESSOURCES/TABLEAU DE COMPETENCES.md` — couverture des compétences.
-- `RESSOURCES/RAPPORT.md` — rapport (hébergement, DNS, …).
-- `RESSOURCES/CORRECTIONS.md` — registre des corrections (1 correction = 1 commit).
+- `RESSOURCES/` — ressources de l'épreuve : `SOMMAIRE.md`, `CAHIER DES CHARGES.md`,
+  `TABLEAU DE COMPETENCES.md`, `RAPPORT.md`, `CORRECTIONS.md` (registre : 1 correction = 1 commit).
+- `RENDU/DOCUMENT-RENDU.md` — document à transmettre (séquences générées via `npm run rendu`).
+- `doc/API.md` — documentation d'API générée via `npm run docs`.
+- `scripts/` — `harden-host.sh` (durcissement), `generate-docs.js`, `generate-rendu.js`.
