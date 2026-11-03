@@ -169,8 +169,21 @@ exports.getOrders = async(req, res)=>{
 }
 
 exports.validateOrder = async (req, res) => {
-  const { orderId } = req.body;
-  res.status(200).json({message: `Commande ${orderId} validée avec succès.`})
+  const { id } = req.params;
+  try {
+    const order = await Order.findByIdAndUpdate(
+      id,
+      { status: 'En cours de traitement', updatedAt: new Date() },
+      { new: true }
+    );
+    if (!order) {
+      return res.status(404).json({ message: 'Commande non trouvée.' });
+    }
+    res.status(200).json({ message: `Commande ${id} validée avec succès.`, order });
+  } catch (error) {
+    console.error('Erreur lors de la validation de la commande', error);
+    res.status(500).json({ message: 'Erreur lors de la validation de la commande.' });
+  }
 }
 
 exports.updateOrderStatus = async (req, res) => {

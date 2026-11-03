@@ -34,7 +34,7 @@ exports.validateOrder = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await Order.findByIdAndUpdate(id, { status: 'Validée' });
+    await Order.findByIdAndUpdate(id, { status: 'En cours de traitement' });
     await axios.post('http://localhost:3001/notify', {
       message: `La commande ${id} a été validée.`,
     });
