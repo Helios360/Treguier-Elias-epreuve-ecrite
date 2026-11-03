@@ -37,17 +37,11 @@ $TTL 3600
 @       3600 IN NS   ns11.infomaniak.ch.
 @       3600 IN NS   ns12.infomaniak.ch.
 
-; --- Production (homeserver) ---
+; --- Production (apex, homeserver) ---
 @       3600 IN A    176.176.123.209
 
-; --- www (même cible que la prod) ---
-www     3600 IN A    176.176.123.209
-
-; --- Pré-production (homeserver, stack isolée) ---
-preprod 3600 IN A    176.176.123.209
-grafana       3600 IN A    176.176.123.209
-prometheus    3600 IN A    176.176.123.209
-alertmanager  3600 IN A    176.176.123.209
+; --- Wildcard : www, preprod, grafana, prometheus, alertmanager, ... ---
+*       3600 IN A    176.176.123.209
 
 ; --- Messagerie : domaine non émetteur ---
 @       3600 IN TXT  "v=spf1 -all"
@@ -60,10 +54,10 @@ Modifications par rapport à la zone Infomaniak initiale :
 |----------------|-------|-------|
 | `@ A` | `84.16.66.164` (parking Infomaniak) | `176.176.123.209` (homeserver) |
 | `@ AAAA` | `2001:1600:0:aaaa::2:14` (parking) | supprimé (IPv4 only) |
-| `www A` | `84.16.66.164` | `176.176.123.209` |
+| `www A` | `84.16.66.164` | couvert par le wildcard `*` |
 | `www AAAA` | `2001:1600:0:aaaa::2:14` | supprimé |
 | `@ / www TXT` | `"1|symnodes.fr"`, `"p|https"` | supprimés (marqueurs de parking) |
-| `preprod A` | — | `176.176.123.209` (créé) |
+| `* A` | — | `176.176.123.209` (créé) — couvre `www`, `preprod`, `grafana`, `prometheus`, `alertmanager` |
 | `NS`, `SOA`, `SPF`, `DMARC` | — | conservés |
 
 ### 1.4 Exposition réseau et TLS

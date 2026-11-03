@@ -106,11 +106,7 @@ $TTL 3600
 @       3600 IN NS   ns11.infomaniak.ch.
 @       3600 IN NS   ns12.infomaniak.ch.
 @       3600 IN A    176.176.123.209
-www     3600 IN A    176.176.123.209
-preprod 3600 IN A    176.176.123.209
-grafana       3600 IN A    176.176.123.209
-prometheus    3600 IN A    176.176.123.209
-alertmanager  3600 IN A    176.176.123.209
+*       3600 IN A    176.176.123.209
 @       3600 IN TXT  "v=spf1 -all"
 _dmarc  3600 IN TXT  "v=DMARC1; p=reject;"
 ```
@@ -158,7 +154,7 @@ Prometheus et Alertmanager sont protégés par **basic-auth** (Caddy). Le mot de
 règle via le hash dans `Caddyfile` (`docker compose exec caddy caddy hash-password --plaintext '...'`).
 Accès local possible aussi sur `127.0.0.1:3000/9090/9093` (serveur ou tunnel SSH).
 
-> Nécessite les sous-domaines `grafana` / `prometheus` / `alertmanager` dans la zone DNS.
+> Couvert par l'enregistrement wildcard `*` de la zone DNS (`@` pour l'apex).
 
 ### Interne (dans le réseau Docker)
 
