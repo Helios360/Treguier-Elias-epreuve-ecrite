@@ -1,32 +1,134 @@
-version: '3'
+# Stack de PRODUCTION — homeserver (symnodes.com)
+# Variables attendues dans un fichier .env à la racine (voir .env.example).
 services:
-  frontend:
-    build: ./frontend
-    ports:
-      - '3000:3000'
-    depends_on:
-      - backend
 
+  # --- Reverse-proxy + terminaison TLS (Let's Encrypt via DNS-01 Infomaniak) ---
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.dnschallenge=true
+      - --certificatesresolvers.le.acme.dnschallenge.provider=infomaniak
+      - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+    environment:
+      - INFOMANIAK_ACCESS_TOKEN=${INFOMANIAK_ACCESS_TOKEN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - proxy
+
+  # --- Base de données (non exposée publiquement, données persistées) ---
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # --- API principale ---
   backend:
     build: ./backend
-    ports:
-      - '5000:5000'
+    restart: unless-stopped
     environment:
-      - MONGO_URI=mongodb://mongo:27017/mydatabase
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DBNAME}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - GATEWAY_URL=http://gateway:8000
+      - CORS_ORIGIN=${DOMAIN_URL}
+      - NOTIFY_RECIPIENT=${NOTIFY_RECIPIENT}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      gateway:
+        condition: service_started
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/products"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
-  mongo:
-    image: mongo
-    ports:
-      - '27018:27017'
-
+  # --- Microservice notifications (email) ---
   notifications:
     build: ./microservices/notifications
-    ports:
-      - '3001:3001'
+    restart: unless-stopped
+    environment:
+      - NOTIFI_PORT=4002
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_APPLICATION_PASSWORD=${EMAIL_APPLICATION_PASSWORD}
+    networks:
+      - app
 
+  # --- Microservice gestion du stock ---
   stock-management:
     build: ./microservices/stock-management
-    ports:
-      - '3002:3002'
+    restart: unless-stopped
+    environment:
+      - STOCK_PORT=4003
+    networks:
+      - app
+
+  # --- Gateway (point d'entrée des microservices) ---
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      - GATEWAY_PORT=8000
+      - NOTIFI_SERVICE_URL=http://notifications:4002
+      - STOCK_SERVICE_URL=http://stock-management:4003
+    depends_on:
+      - notifications
+      - stock-management
+    networks:
+      - app
+
+  # --- Frontend (React build servi par Nginx) ---
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - REACT_APP_API_BASE_URL=/api
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - app
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.front.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.front.entrypoints=websecure"
+      - "traefik.http.routers.front.tls=true"
+      - "traefik.http.routers.front.tls.certresolver=le"
+      - "traefik.http.services.front.loadbalancer.server.port=80"
+
+volumes:
+  mongo-data:
+  traefik-certs:
+
+networks:
+  proxy:
+  app:
