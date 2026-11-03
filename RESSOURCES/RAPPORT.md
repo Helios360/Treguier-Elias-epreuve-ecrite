@@ -45,6 +45,9 @@ www     3600 IN A    176.176.123.209
 
 ; --- Pré-production (homeserver, stack isolée) ---
 preprod 3600 IN A    176.176.123.209
+grafana       3600 IN A    176.176.123.209
+prometheus    3600 IN A    176.176.123.209
+alertmanager  3600 IN A    176.176.123.209
 
 ; --- Messagerie : domaine non émetteur ---
 @       3600 IN TXT  "v=spf1 -all"

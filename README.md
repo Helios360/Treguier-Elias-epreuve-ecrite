@@ -108,6 +108,9 @@ $TTL 3600
 @       3600 IN A    176.176.123.209
 www     3600 IN A    176.176.123.209
 preprod 3600 IN A    176.176.123.209
+grafana       3600 IN A    176.176.123.209
+prometheus    3600 IN A    176.176.123.209
+alertmanager  3600 IN A    176.176.123.209
 @       3600 IN TXT  "v=spf1 -all"
 _dmarc  3600 IN TXT  "v=DMARC1; p=reject;"
 ```
@@ -143,21 +146,19 @@ son `CMD` et son contexte. Docker recommande un Dockerfile par contexte de build
 
 Routes front : `/` (accueil) · `/cart` · `/login` · `/register` · `/shippig_payment` · `/order` · `/admin`.
 
-### Supervision (E26) — accès local / VPN uniquement, non exposé publiquement
+### Supervision (E26) — exposée sur des sous-domaines
 
-Interfaces liées à `127.0.0.1` sur le serveur. Depuis un poste, tunnel SSH :
+| Service | URL publique | Identifiants |
+|---------|--------------|--------------|
+| Grafana | https://grafana.symnodes.com | `admin` / `$GRAFANA_ADMIN_PASSWORD` |
+| Prometheus | https://prometheus.symnodes.com | basic-auth `admin` / mot de passe Caddy |
+| Alertmanager | https://alertmanager.symnodes.com | basic-auth `admin` / mot de passe Caddy |
 
-```bash
-ssh -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 -L 9093:127.0.0.1:9093 user@<homeserver>
-# puis : http://localhost:3000 (Grafana) · :9090 (Prometheus) · :9093 (Alertmanager)
-```
+Prometheus et Alertmanager sont protégés par **basic-auth** (Caddy). Le mot de passe se
+règle via le hash dans `Caddyfile` (`docker compose exec caddy caddy hash-password --plaintext '...'`).
+Accès local possible aussi sur `127.0.0.1:3000/9090/9093` (serveur ou tunnel SSH).
 
-| Service | URL locale | Identifiants |
-|---------|-----------|--------------|
-| Grafana | http://127.0.0.1:3000 | `admin` / `$GRAFANA_ADMIN_PASSWORD` |
-| Prometheus | http://127.0.0.1:9090 | — |
-| Alertmanager | http://127.0.0.1:9093 | — |
-| cAdvisor | http://127.0.0.1:8080 | — |
+> Nécessite les sous-domaines `grafana` / `prometheus` / `alertmanager` dans la zone DNS.
 
 ### Interne (dans le réseau Docker)
 

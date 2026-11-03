@@ -1,7 +1,37 @@
+# Reverse-proxy de production (Caddy) — TLS Let's Encrypt automatique.
+
+# Application
 symnodes.com, www.symnodes.com {
-    reverse_proxy front-prod:80
+	reverse_proxy front-prod:80
 }
 
 preprod.symnodes.com {
-    reverse_proxy front-preprod:80
+	reverse_proxy front-preprod:80
+}
+
+# --- Supervision (E26) : outils exposés sur des sous-domaines ---
+# Prometheus et Alertmanager sont protégés par basic-auth.
+#
+# ⚠️ Le hash ci-dessous correspond au mot de passe d'exemple « changez-moi ».
+#    Régénérer le tien après avoir choisi un mot de passe :
+#      docker compose exec caddy caddy hash-password --plaintext 'VOTRE_MOT_DE_PASSE'
+#    puis remplacer la ligne du hash.
+(monitoring_auth) {
+	basic_auth {
+		admin $2a$12$6pxJahD3zHxipVNX4cY/fej3inSfBBADYvsXwZSXMHOcm5C7HHlWy
+	}
+}
+
+grafana.symnodes.com {
+	reverse_proxy grafana:3000
+}
+
+prometheus.symnodes.com {
+	import monitoring_auth
+	reverse_proxy prometheus:9090
+}
+
+alertmanager.symnodes.com {
+	import monitoring_auth
+	reverse_proxy alertmanager:9093
 }

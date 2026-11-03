@@ -1,8 +1,9 @@
 # Stack de SUPERVISION (E26) — Prometheus + Grafana + Alertmanager + exporters.
 #
-# Se greffe sur le réseau applicatif de la prod (symnodes-app) pour scraper le backend.
-# Les interfaces (Grafana/Prometheus/Alertmanager) sont liées à la boucle locale :
-# on y accède depuis le serveur ou via le VPN / un tunnel SSH — jamais en public.
+# - Se greffe sur le réseau applicatif de la prod (symnodes-app) pour scraper le backend.
+# - Grafana, Prometheus et Alertmanager rejoignent le réseau proxy (traefik-proxy)
+#   pour être exposés publiquement par Caddy sur des sous-domaines.
+# - node-exporter / cAdvisor / blackbox restent internes.
 #
 # Lancement : docker compose -f docker-compose.monitoring.yml up -d
 services:
@@ -21,6 +22,7 @@ services:
     networks:
       - monitoring
       - app
+      - proxy
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
@@ -39,6 +41,7 @@ services:
       - "127.0.0.1:9093:9093"
     networks:
       - monitoring
+      - proxy
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
@@ -76,6 +79,7 @@ services:
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -83,6 +87,7 @@ services:
       - "127.0.0.1:3000:3000"
     networks:
       - monitoring
+      - proxy
 
 volumes:
   prometheus-data:
@@ -93,3 +98,6 @@ networks:
   app:
     external: true
     name: symnodes-app
+  proxy:
+    external: true
+    name: traefik-proxy
