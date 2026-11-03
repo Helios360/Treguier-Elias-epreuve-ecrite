@@ -71,7 +71,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Les secrets SSH peuvent ne pas encore être configurés (clé non posée par
+      # l'admin serveur) : sans garde-fou, le job échoue sur « missing server host »
+      # et rend tout le pipeline rouge. On saute alors le déploiement proprement.
+      - id: gate
+        run: echo "enabled=${{ secrets.DEPLOY_HOST != '' }}" >> "$GITHUB_OUTPUT"
       - name: Déployer sur preprod.symnodes.com
+        if: steps.gate.outputs.enabled == 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -89,7 +95,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      # Idem deploy-preprod : on ne tente le déploiement que si les secrets sont posés.
+      - id: gate
+        run: echo "enabled=${{ secrets.DEPLOY_HOST != '' }}" >> "$GITHUB_OUTPUT"
       - name: Déployer sur symnodes.com
+        if: steps.gate.outputs.enabled == 'true'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
