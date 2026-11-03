@@ -7,7 +7,14 @@ const connectDB = require('./config/db');
 const app = express();
 connectDB();
 
-app.use(cors());
+// CORS restreint aux origines autorisées (configurable via la variable CORS_ORIGIN,
+// séparées par des virgules). Par défaut : le frontend local.
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+    : 'http://localhost:3000',
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
