@@ -33,7 +33,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node --test backend/validation/schemas.test.js
+      # Les dépendances du backend (dont joi, requis par schemas.js) doivent être
+      # installées : sans ce `npm ci`, le test échoue sur `Cannot find module 'joi'`.
+      - run: npm ci
+        working-directory: backend
+      - run: node --test validation/schemas.test.js
+        working-directory: backend
 
   test-frontend:
     name: Tests frontend (jest)
