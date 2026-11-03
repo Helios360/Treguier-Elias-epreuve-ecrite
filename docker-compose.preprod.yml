@@ -59,6 +59,10 @@ services:
     restart: unless-stopped
     environment:
       - STOCK_PORT=4003
+      - MONGO_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DBNAME}?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
     networks:
       - app
 

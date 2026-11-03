@@ -73,16 +73,14 @@ exports.createOrder = async (req, res) => {
       logger.error('Erreur lors de l\'envoi de la notification', error);
     }
 
-    // Appel au micro-service de gestion des stocks
-    // try {
-    //   await Promise.all(
-    //     items.map(({ productId, quantity }) =>
-    //       axios.post('http://localhost:8000/update-stock', { productId, quantity })
-    //     )
-    //   );
-    // } catch (error) {
-    //   logger.error('Erreur lors de la mise à jour des stocks', error);
-    // }
+    // Mise à jour du stock via le microservice dédié (décentralisation)
+    try {
+      await axios.post(`${GATEWAY_URL}/update-stock`, {
+        items: items.map(({ productId, quantity }) => ({ productId, quantity })),
+      });
+    } catch (error) {
+      logger.error('Erreur lors de la mise à jour des stocks', error);
+    }
 
     // Réponse de succès
     req.flash('success', 'Commande créée avec succès');
