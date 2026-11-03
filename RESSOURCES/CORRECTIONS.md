@@ -270,6 +270,22 @@
 - **Correction** : logger JSON structuré (sans dépendance externe) par service, substitué à `console.*`.
 - **Vérification** : `node --check` OK ; aucun `console.*` restant hors `logger.js` ; lint OK.
 
+### 29. Compte administrateur créé au seed
+
+- **Commit** : `eb3a9b0` — `feat(seed): cree un compte administrateur au seed (E29/E27)`
+- **Fichiers** : `backend/seeder.js`, `.env.example`
+- **Problème** : le seed n'insérait que les produits ; aucun compte `admin` n'existait, rendant `/admin` inaccessible.
+- **Correction** : le seed crée (ou promeut) un administrateur depuis `ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` ; mot de passe hashé par le hook du modèle `User`.
+- **Vérification** : `node --check` OK.
+
+### 30. Exposition des outils de supervision sur des sous-domaines
+
+- **Commit** : `7b0fd85` — `feat(monitoring): expose Grafana/Prometheus/Alertmanager sur des sous-domaines (E26)`
+- **Fichiers** : `Caddyfile`, `docker-compose.monitoring.yml`, `README.md`, `RESSOURCES/RAPPORT.md`
+- **Problème** : les interfaces de supervision n'étaient accessibles que par tunnel SSH (l'examinateur ne devait pas recevoir de clé SSH).
+- **Correction** : sites Caddy `grafana.` / `prometheus.` / `alertmanager.symnodes.com` ; basic-auth Caddy pour Prometheus et Alertmanager ; les 3 services rejoignent le réseau proxy ; DNS + README mis à jour.
+- **Vérification** : `docker compose config` OK ; YAML valide.
+
 ---
 
 ## Modèle de partie
