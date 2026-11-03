@@ -3,6 +3,7 @@
 const express = require('express');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const logger = require('./logger');
 
 const app = express();
 app.use(express.json());
@@ -24,8 +25,8 @@ const Product = mongoose.model('Product', productSchema);
 
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log('stock-management : MongoDB connecté'))
-  .catch((err) => console.error('stock-management : erreur MongoDB', err.message));
+  .then(() => logger.info('stock-management : MongoDB connecté'))
+  .catch((err) => logger.error('stock-management : erreur MongoDB', err.message));
 
 // Décrémente le stock d'un ou plusieurs produits.
 // Accepte { productId, quantity } ou { items: [{ productId, quantity }] }.
@@ -64,4 +65,4 @@ app.get('/stock/:productId', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Service de gestion des stocks sur le port ${PORT}`));
+app.listen(PORT, () => logger.info(`Service de gestion des stocks sur le port ${PORT}`));

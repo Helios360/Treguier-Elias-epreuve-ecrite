@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const notifiProxy = require('./routes/notifi');
 const stockProxy = require('./routes/stock');
+const logger = require('./logger');
 
 dotenv.config();
 
@@ -18,5 +19,5 @@ app.use('/update-stock', stockProxy);
 // Lancer le Gateway
 const PORT = process.env.GATEWAY_PORT || 8000;
 app.listen(PORT, () => {
-  console.log(`Gateway opérationnel sur le port ${PORT}`);
+  logger.info(`Gateway opérationnel sur le port ${PORT}`);
 });
