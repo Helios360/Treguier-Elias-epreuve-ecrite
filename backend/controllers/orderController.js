@@ -147,9 +147,18 @@ exports.createOrder = async (req, res) => {
 //     }
 //   };
 
-exports.deleteOrder = async(req, res)=>{
-    const { orderId } = req.body;
-    console.log(`orderId to delete is ${orderId}`)
+exports.deleteOrder = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deletedOrder = await Order.findByIdAndDelete(id);
+    if (!deletedOrder) {
+      return res.status(404).json({ message: 'Commande non trouvée.' });
+    }
+    res.status(200).json({ message: `Commande ${id} supprimée avec succès.` });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la commande', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression de la commande.' });
+  }
 }
 
 exports.getOrders = async(req, res)=>{
