@@ -131,4 +131,5 @@ volumes:
 
 networks:
   proxy:
+    name: traefik-proxy
   app:
