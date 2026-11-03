@@ -1,0 +1,16 @@
+apiVersion: 1
+
+# Fournisseur de dashboards : Grafana lit les fichiers JSON de ce répertoire
+# (monté en lecture seule depuis ./monitoring/grafana/provisioning).
+# Toute modification du JSON est rechargée automatiquement sous 30 s.
+providers:
+  - name: symnodes
+    orgId: 1
+    folder: symnodes
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
+      foldersFromFilesStructure: false

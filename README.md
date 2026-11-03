@@ -232,6 +232,14 @@ Routes front : `/` (accueil) · `/cart` · `/login` · `/register` · `/shippig_
 | Prometheus   | https://prometheus.symnodes.com   | basic-auth `admin` / mot de passe Caddy |
 | Alertmanager | https://alertmanager.symnodes.com | basic-auth `admin` / mot de passe Caddy |
 
+Dashboard **`symnodes — Vue d'ensemble`** (dossier `symnodes`) :
+https://grafana.symnodes.com/d/symnodes-overview
+
+Il est **provisionné par fichier** — `monitoring/grafana/provisioning/dashboards/json/` —
+donc versionné et recréé à l'identique sur toute nouvelle installation : disponibilité des
+deux environnements (sondes blackbox), débit et latence p95 du backend, mémoire Node.js,
+CPU/RAM/disque de l'hôte, et consommation par conteneur.
+
 Prometheus et Alertmanager sont protégés par **basic-auth** (Caddy). Le mot de passe se
 règle via le hash dans `caddy/Caddyfile` (`docker compose exec caddy caddy hash-password --plaintext '...'`).
 Lancement : `docker compose -p symnodes-monitoring -f docker-compose.monitoring.yml up -d` (nom de projet distinct ; aucun port hôte exposé, tout passe par le réseau Docker).

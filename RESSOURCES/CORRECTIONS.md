@@ -399,6 +399,29 @@
   et « Dépannage » ajoutées au README.
 - **Vérification** : procédure relue ; commandes conformes aux fichiers compose.
 
+### 39. Dashboard Grafana provisionné pour la vue d'ensemble
+
+- **Commit** : `861001a` — `feat(monitoring): dashboard Grafana provisionne pour la vue d'ensemble`
+- **Fichiers** : `monitoring/grafana/provisioning/dashboards/default.yml`,
+  `monitoring/grafana/provisioning/dashboards/json/symnodes-overview.json`,
+  `monitoring/grafana/provisioning/datasources/prometheus.yml`, `scripts/deploy.sh`
+- **Problème** : seule la datasource Prometheus était provisionnée ; aucune visualisation
+  n'existait, et un dashboard créé à la main dans l'interface aurait été perdu avec le
+  volume Grafana — donc absent de toute nouvelle installation.
+- **Correction** : dashboard `symnodes — Vue d'ensemble` (uid `symnodes-overview`) déclaré
+  par fichier, avec un fournisseur de provisioning dans le dossier `symnodes`. 16 panneaux
+  couvrant la disponibilité des deux environnements (sondes blackbox), les cibles
+  Prometheus, le taux de 5xx, la latence des sondes, le débit par route, la latence p95 du
+  backend, la mémoire du tas Node.js, CPU/RAM/disque de l'hôte et la consommation par
+  conteneur — restreinte aux stacks `symnodes`. L'`uid` de la datasource est fixé à
+  `prometheus` pour que les panneaux ne dépendent pas d'un identifiant généré.
+  `deploy.sh` rend le répertoire de provisioning lisible : Grafana s'exécute en UID 472 et
+  bouclait en `permission denied` sur un fichier laissé en `600`.
+- **Vérification** : les 14 requêtes PromQL ont été exécutées sur l'API et renvoient toutes
+  des séries (la requête 5xx est forcée à `0` via `or vector(0)` pour ne pas rester vide en
+  l'absence d'erreur) ; requête rejouée via `/api/ds/query` de Grafana → `200`, cibles à
+  `100 %` ; le dashboard apparaît dans `/api/search` et Grafana recharge le JSON à chaud.
+
 ---
 
 ## Modèle de partie
