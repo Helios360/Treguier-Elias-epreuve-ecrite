@@ -83,15 +83,10 @@ services:
     depends_on:
       - backend
     networks:
-      - app
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.front-preprod.rule=Host(`preprod.${DOMAIN}`)"
-      - "traefik.http.routers.front-preprod.entrypoints=websecure"
-      - "traefik.http.routers.front-preprod.tls=true"
-      - "traefik.http.routers.front-preprod.tls.certresolver=le"
-      - "traefik.http.services.front-preprod.loadbalancer.server.port=80"
+      app:
+      proxy:
+        aliases:
+          - front-preprod
 
 volumes:
   mongo-preprod-data:

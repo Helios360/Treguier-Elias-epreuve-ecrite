@@ -1,0 +1,7 @@
+symnodes.com, www.symnodes.com {
+    reverse_proxy front-prod:80
+}
+
+preprod.symnodes.com {
+    reverse_proxy front-preprod:80
+}
