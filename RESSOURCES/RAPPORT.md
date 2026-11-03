@@ -65,12 +65,9 @@ Modifications par rapport à la zone Infomaniak initiale :
 
 ### 1.4 Exposition réseau et TLS
 
-- Port-forward de la box : **TCP 443 → homeserver** (reverse-proxy Traefik).
-  Le port 80 n'est pas nécessaire (certificats obtenus en challenge **DNS-01**).
-- **Certificats TLS** : Let's Encrypt via le provider **lego `infomaniak`**
-  (variable `INFOMANIAK_ACCESS_TOKEN`, token API scope « domain » créé sur
-  `manager.infomaniak.com/v3/infomaniak-api`). Permet un certificat **wildcard
-  `*.symnodes.com`** sans ouvrir le port 80.
+- Port-forward de la box : **TCP 80 et 443 → homeserver** (reverse-proxy Caddy).
+- **Certificats TLS** : Let's Encrypt obtenus automatiquement par **Caddy** via HTTP-01
+  (port 80 ouvert). Caddy gère le renouvellement et la redirection HTTP → HTTPS.
 - Production et pré-production partagent l'IP : le routage se fait par **en-tête Host**
   (`symnodes.com` / `www.symnodes.com` → prod, `preprod.symnodes.com` → pré-prod).
 - L'administration (SSH, Docker, commandes de production) reste derrière le **VPN

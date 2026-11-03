@@ -120,6 +120,24 @@
 
 ---
 
+## 11. Remplacement de Traefik par Caddy (reverse-proxy)
+
+- **Commit** : `804331a` — `build(compose): remplace Traefik par Caddy (TLS auto Let's Encrypt)`
+- **Fichiers** : `docker-compose.yml`, `docker-compose.preprod.yml`, `Caddyfile` (créé), `.env.example`, `README.md`, `RESSOURCES/RAPPORT.md`
+- **Problème** : Traefik ne pouvait pas binder les ports 80/443 (nginx les occupait), et l'API Docker était trop ancienne pour le client Go embarqué (v1.24 vs min 1.40). Le certificat mkcert par défaut empêchait l'affichage du site.
+- **Correction** : suppression de Traefik et du stack nginx/certbot/nginx-ui ; ajout de **Caddy** comme reverse-proxy (TLS auto Let's Encrypt via HTTP-01). Le frontend est accessible via l'alias réseau `front-prod`. La stack préprod partage le même Caddy via l'alias `front-preprod`.
+- **Vérification** : `symnodes.com`, `www.symnodes.com` et `preprod.symnodes.com` répondent en 200 avec certificat Let's Encrypt valide.
+
+### 12. Correction du crash du microservice stock-management
+
+- **Commit** : `9c87114` — `fix(stock): retire le require dotenv absent des dependances`
+- **Fichier** : `microservices/stock-management/index.js`
+- **Problème** : `require('dotenv').config()` alors que `dotenv` n'est pas dans les dépendances (`npm ci --omit=dev` ne l'installe pas) → `MODULE_NOT_FOUND` au démarrage, conteneur en boucle de redémarrage.
+- **Correction** : suppression du `require` inutile (les variables viennent de `environment` dans le compose).
+- **Vérification** : conteneur `stock-management` stable (prod et préprod).
+
+---
+
 ## Modèle de partie
 
 ```

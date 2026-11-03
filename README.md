@@ -26,7 +26,7 @@ Application e-commerce **MERN** conteneurisée, à mettre en production et à ma
 - **Microservices** : `notifications` (NodeMailer), `stock-management`.
 - **Gateway** : point d'entrée des microservices (proxy `express-http-proxy`).
 - **Base de données** : MongoDB.
-- **Infra** : Docker / Docker Compose, Traefik (reverse-proxy + TLS), Nginx (frontend).
+- **Infra** : Docker / Docker Compose, Caddy (reverse-proxy + TLS automatique), Nginx (frontend).
 
 ## Architecture
 
@@ -51,7 +51,7 @@ frontend (React build → Nginx) ──/api──► backend (Express/Mongoose) 
 | Pré-production | `docker-compose.preprod.yml` | `preprod.symnodes.com` | qualification |
 | Production | `docker-compose.yml` | `symnodes.com` | production |
 
-Tous partagent le reverse-proxy **Traefik** (réseau `traefik-proxy`), défini dans la stack
+Tous partagent le reverse-proxy **Caddy** (réseau `traefik-proxy`), défini dans la stack
 de production.
 
 ## Démarrage rapide (dev)
@@ -79,8 +79,7 @@ docker compose -p symnodes-preprod -f docker-compose.preprod.yml up -d
 ```
 
 Prérequis réseau : redirection TCP **443** de la box vers le serveur ; certificats TLS
-Let's Encrypt obtenus automatiquement en challenge **DNS-01** (Infomaniak), aucune
-ouverture du port 80 nécessaire.
+Let's Encrypt obtenus automatiquement par **Caddy** (HTTP-01 sur le port 80, redirigé vers 443).
 
 ## Variables d'environnement
 
@@ -89,7 +88,6 @@ Voir `.env.example`. Variables principales :
 | Variable | Rôle |
 |----------|------|
 | `DOMAIN`, `DOMAIN_URL`, `PREDOMAIN_URL` | Domaine et URLs des environnements |
-| `ACME_EMAIL`, `INFOMANIAK_ACCESS_TOKEN` | Let's Encrypt (challenge DNS-01 Infomaniak) |
 | `MONGO_ROOT_USER`, `MONGO_ROOT_PASSWORD`, `MONGO_DBNAME` | Base de données |
 | `JWT_SECRET` | Signature des tokens JWT |
 | `NOTIFY_RECIPIENT` | Destinataire des notifications de commande |
